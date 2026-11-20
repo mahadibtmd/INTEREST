@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PFE &amp; FDR Calculation Suite (Final 2)</title>
+<style>
+  :root {
+    --bg: #f3f6f9;
+    --card: #ffffff;
+    --primary: #0f766e;
+    --primary-dark: #115e59;
+    --accent: #1d4ed8;
+    --text: #0f172a;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --highlight: #f0fdfa;
+  }
+  * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+  body { margin: 0; padding: 16px; background: var(--bg); color: var(--text); }
+  .container { max-width: 800px; margin: 0 auto; background: var(--card); border-radius: 14px; box-shadow: 0 8px 28px rgba(15,23,42,0.08); overflow: hidden; }
+  .header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+  .header h1 { margin: 0; font-size: 20px; font-weight: 700; }
+  .header p { margin: 4px 0 0; font-size: 12px; opacity: 0.9; }
+  .tabs { display: flex; background: #e2e8f0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .tab-btn { flex: 1; min-width: 160px; padding: 13px 12px; border: none; background: transparent; font-size: 13px; font-weight: 700; color: var(--muted); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; }
+  .tab-btn.active { color: var(--primary-dark); background: #fff; border-bottom-color: var(--primary); }
+  .content { padding: 22px 24px; display: none; }
+  .content.active { display: block; }
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 18px; }
+  .field label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .field input, .field select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; font-weight: 600; color: var(--text); outline: none; background: #fff; }
+  .field input:focus, .field select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(15,118,110,0.15); }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 14px; }
+  th, td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+  th { background: #f8fafc; font-weight: 700; color: var(--muted); font-size: 12px; text-transform: uppercase; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.total-row td { background: var(--highlight); font-weight: 700; font-size: 15px; color: var(--primary-dark); border-top: 2px solid var(--primary); }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; background: #e0f2fe; color: #0369a1; }
+  .matrix-box { margin-top: 22px; padding-top: 16px; border-top: 1px dashed #cbd5e1; }
+  .matrix-box h3 { margin: 0 0 10px; font-size: 14px; color: var(--text); }
+  .docs { margin-top: 20px; background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; font-size: 13px; }
+  .docs h4 { margin: 0 0 8px; font-size: 13px; color: var(--text); }
+  .docs ul { margin: 0; padding-left: 18px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 5px 16px; }
+  .footer { padding: 13px 24px; background: #f8fafc; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--muted); }
+  .copy-btn { background: var(--accent); color: #fff; border: none; padding: 9px 14px; border-radius: 7px; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .copy-btn:hover { background: #1e40af; }
+  .note { font-size: 11px; color: var(--muted); margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div>
+      <h1>PFE &amp; FDR Calculation Suite</h1>
+      <p>CALCULATION FINAL_2 &bull; All amounts in BDT</p>
+    </div>
+    <button class="copy-btn" onclick="copySummary()">Copy Summary</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('savings', this)">1. PFE with Savings</button>
+    <button class="tab-btn" onclick="switchTab('fdr', this)">2. Pre-Foreign with FDR</button>
+    <button class="tab-btn" onclick="switchTab('interest', this)">3. Customer FDR Interest</button>
+  </div>
+
+  <!-- TAB 1: PFE WITH SAVINGS -->
+  <div id="savings" class="content active">
+    <div class="grid-2">
+      <div class="field">
+        <label for="s_amount">Loan / Savings Amount (BDT)</label>
+        <input type="number" id="s_amount" value="1000001" min="0" step="1" oninput="calcSavings()">
+      </div>
+      <div class="field">
+        <label for="s_months">Months</label>
+        <input type="number" id="s_months" value="3" min="1" step="1" oninput="calcSavings()">
+      </div>
+      <div class="field">
+        <label for="s_rate">Interest Rate (% p.a.)</label>
+        <input type="number" id="s_rate" value="8" min="0" step="0.05" oninput="calcSavings()">
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Particulars</th><th>Charge Type</th><th class="num">Amount (BDT)</th></tr>
+      </thead>
+      <tbody id="s_rows"></tbody>
+    </table>
+    <p class="note">*Savings Interest Rate @ 9% noted; loan interest calculated at 8% p.a. ((Amount &times; Rate) / 12 &times; Months).</p>
+  </div>
+
+  <!-- TAB 2: PRE-FOREIGN WITH FDR -->
+  <div id="fdr" class="content">
+    <div class="grid-2">
+      <div class="field">
+        <label for="f_amount">Input / FDR Amount (BDT)</label>
+        <input type="number" id="f_amount" value="500000" min="0" step="1000" oninput="calcFDR()">
+      </div>
+      <div class="field">
+        <label for="f_months">FDR Month / Tenure</label>
+        <select id="f_months" onchange="calcFDR()">
+          <option value="1">1 Month (5.00% p.a.)</option>
+          <option value="3" selected>3 Months (7.50% p.a.)</option>
+          <option value="6">6 Months (7.50% p.a.)</option>
+          <option value="12">12 Months (7.75% p.a.)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="f_loan_rate">Loan Interest Rate (% p.a.)</label>
+        <input type="number" id="f_loan_rate" value="10" min="0" step="0.1" oninput="calcFDR()">
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Particulars</th><th>Category</th><th class="num">Amount (BDT)</th></tr>
+      </thead>
+      <tbody id="f_rows"></tbody>
+    </table>
+
+    <div class="matrix-box">
+      <h3>Customer's FDR Calculation (Net Payable = Gross Interest &times; 0.85)</h3>
+      <table>
+        <thead>
+          <tr><th>Months</th><th class="num">Rate</th><th class="num">Interest</th><th class="num">Net Payable (&times;0.85)</th></tr>
+        </thead>
+        <tbody id="f_matrix"></tbody>
+      </table>
+    </div>
+    <p class="note">*N*B: All calculations are approximate.</p>
+  </div>
+
+  <!-- TAB 3: CUSTOMER'S FDR INTEREST CALCULATION -->
+  <div id="interest" class="content">
+    <div class="grid-2">
+      <div class="field">
+        <label for="i_amount">Input Amount (BDT)</label>
+        <input type="number" id="i_amount" value="100000" min="0" step="1000" oninput="calcInterest()">
+      </div>
+      <div class="field">
+        <label for="i_months">Months</label>
+        <select id="i_months" onchange="calcInterest()">
+          <option value="1">1 Month (5.00% p.a.)</option>
+          <option value="3">3 Months (7.25% p.a.)</option>
+          <option value="6">6 Months (7.50% p.a.)</option>
+          <option value="12" selected>12 Months (7.75% p.a.)</option>
+        </select>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Tenure</th><th class="num">Rate</th><th class="num">Interest</th><th class="num">Net Payable (&times;0.85)</th></tr>
+      </thead>
+      <tbody id="i_matrix"></tbody>
+    </table>
+  </div>
+
+  <div class="docs">
+    <h4>Documents</h4>
+    <ul>
+      <li>NID student</li>
+      <li>NID gurdian</li>
+      <li>Passport of student</li>
+      <li>Photo Student+Gurdian</li>
+      <li>Offer letter/Application copy of student</li>
+      <li>Last Academic Certificate of student</li>
+    </ul>
+  </div>
+
+  <div class="footer">
+    <span>For More details: 01580395618</span>
+    <span id="status_msg">Ready</span>
+  </div>
+</div>
+
+<script>
+const fmt = (n) => Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+function exciseDuty(amt) {
+  if (amt <= 400000) return 0;
+  if (amt <= 500000) return 150;
+  if (amt <= 1000000) return 500;
+  if (amt <= 5000000) return 3000;
+  if (amt <= 10000000) return 5000;
+  if (amt <= 20000000) return 10000;
+  if (amt <= 50000000) return 20000;
+  return 50000;
+}
+
+function switchTab(id, btn) {
+  document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+function calcSavings() {
+  const amt = parseFloat(document.getElementById('s_amount').value) || 0;
+  const months = parseFloat(document.getElementById('s_months').value) || 0;
+  const rate = (parseFloat(document.getElementById('s_rate').value) || 0) / 100;
+
+  const loanInt = ((amt * rate) / 12) * months;
+  const gov = 1620;
+  const cib = 230;
+  const proc = 1150;
+  const excise = exciseDuty(amt);
+  const total = loanInt + gov + cib + proc + excise;
+
+  document.getElementById('s_rows').innerHTML = `
+    <tr><td>Loan Interest (${months} mos @ ${(rate*100).toFixed(2)}%)</td><td><span class="badge">Calculated</span></td><td class="num">${fmt(loanInt)}</td></tr>
+    <tr><td>Gov. Stamp</td><td><span class="badge">FIXED CHARGE</span></td><td class="num">${fmt(gov)}</td></tr>
+    <tr><td>CIB Charge Bangladesh Bank</td><td><span class="badge">FIXED CHARGE</span></td><td class="num">${fmt(cib)}</td></tr>
+    <tr><td>Processing fee</td><td><span class="badge">FIXED CHARGE</span></td><td class="num">${fmt(proc)}</td></tr>
+    <tr><td>Excise Duty</td><td><span class="badge">FIXED CHARGE</span></td><td class="num">${fmt(excise)}</td></tr>
+    <tr class="total-row"><td colspan="2">TOTAL COST</td><td class="num">${fmt(total)}</td></tr>
+  `;
+}
+
+function calcFDR() {
+  const amt = parseFloat(document.getElementById('f_amount').value) || 0;
+  const months = parseInt(document.getElementById('f_months').value, 10) || 3;
+  const loanRate = (parseFloat(document.getElementById('f_loan_rate').value) || 0) / 100;
+
+  const loanInt = ((amt * loanRate) / 12) * months;
+  const gov = 1620;
+  const cib = 230;
+  const proc = 1150;
+  const excise = exciseDuty(amt);
+  const chargesTotal = loanInt + gov + cib + proc;
+
+  const tiers = [
+    { m: 1, r: 0.05 },
+    { m: 3, r: 0.075 },
+    { m: 6, r: 0.075 },
+    { m: 12, r: 0.0775 }
+  ];
+
+  let selectedNet = 0;
+  let matrixHtml = '';
+  tiers.forEach(t => {
+    const gross = ((amt * t.r) / 12) * t.m;
+    const net = gross * 0.85;
+    if (t.m === months) selectedNet = net;
+    const activeMark = t.m === months ? ' <strong>(Selected)</strong>' : '';
+    matrixHtml += `
+      <tr>
+        <td>${t.m}${activeMark}</td>
+        <td class="num">${t.r.toFixed(4)} (${(t.r * 100).toFixed(2)}%)</td>
+        <td class="num">${fmt(gross)}</td>
+        <td class="num">${fmt(net)}</td>
+      </tr>
+    `;
+  });
+
+  const totalExpense = chargesTotal - selectedNet;
+
+  document.getElementById('f_rows').innerHTML = `
+    <tr><td>Loan Interest (${months} mos @ ${(loanRate*100).toFixed(2)}%)</td><td><span class="badge">Calculated</span></td><td class="num">${fmt(loanInt)}</td></tr>
+    <tr><td>Gov. Stamp</td><td><span class="badge">Fixed</span></td><td class="num">${fmt(gov)}</td></tr>
+    <tr><td>CIB Charge Bangladesh Bank</td><td><span class="badge">Fixed</span></td><td class="num">${fmt(cib)}</td></tr>
+    <tr><td>Processing fee</td><td><span class="badge">Fixed</span></td><td class="num">${fmt(proc)}</td></tr>
+    <tr><td>Excise Duty</td><td><span class="badge">Slab</span></td><td class="num">${fmt(excise)}</td></tr>
+    <tr><td>Charges Subtotal (Loan Int + Gov + CIB + Proc)</td><td><span class="badge">Subtotal</span></td><td class="num">${fmt(chargesTotal)}</td></tr>
+    <tr><td>FDR AMOUNT</td><td><span class="badge">Deposit</span></td><td class="num">${fmt(amt)}</td></tr>
+    <tr><td>FDR Interest (${months} mos Net)</td><td><span class="badge">Less Net Interest</span></td><td class="num">-${fmt(selectedNet)}</td></tr>
+    <tr class="total-row"><td colspan="2">Total Expense</td><td class="num">${fmt(totalExpense)}</td></tr>
+  `;
+  document.getElementById('f_matrix').innerHTML = matrixHtml;
+}
+
+function calcInterest() {
+  const amt = parseFloat(document.getElementById('i_amount').value) || 0;
+  const selM = parseInt(document.getElementById('i_months').value, 10) || 12;
+
+  const tiers = [
+    { m: 1, r: 0.05 },
+    { m: 3, r: 0.0725 },
+    { m: 6, r: 0.075 },
+    { m: 12, r: 0.0775 }
+  ];
+
+  let html = '';
+  tiers.forEach(t => {
+    const gross = ((amt * t.r) / 12) * t.m;
+    const net = gross * 0.85;
+    const cls = t.m === selM ? ' class="total-row"' : '';
+    html += `
+      <tr${cls}>
+        <td>${t.m} Month${t.m > 1 ? 's' : ''}${t.m === selM ? ' (Selected)' : ''}</td>
+        <td class="num">${t.r.toFixed(4)} (${(t.r * 100).toFixed(2)}%)</td>
+        <td class="num">${fmt(gross)}</td>
+        <td class="num">${fmt(net)}</td>
+      </tr>
+    `;
+  });
+  document.getElementById('i_matrix').innerHTML = html;
+}
+
+function copySummary() {
+  const activeTab = document.querySelector('.content.active').id;
+  let selector = '#s_rows tr';
+  let title = 'PFE with Savings';
+  if (activeTab === 'fdr') { selector = '#f_rows tr'; title = 'Pre-Foreign with FDR'; }
+  else if (activeTab === 'interest') { selector = '#i_matrix tr'; title = 'Customer FDR Interest'; }
+
+  const rows = Array.from(document.querySelectorAll(selector)).map(tr =>
+    Array.from(tr.children).map(td => td.innerText.trim()).join(' | ')
+  );
+  const text = `${title}\n` + rows.join('\n');
+  navigator.clipboard.writeText(text).then(() => {
+    const msg = document.getElementById('status_msg');
+    msg.innerText = 'Copied!';
+    setTimeout(() => msg.innerText = 'Ready', 2000);
+  });
+}
+
+calcSavings();
+calcFDR();
+calcInterest();
+</script>
+</body>
+</html>
